@@ -94,10 +94,10 @@ const ASSETS = {
     fee: 0.00012,
     address: "4AdUndXHHZ9pfQj27iMAjAr4qbNM4Ne6z4kZ8ZYvyXn29Xf8U6VfxwzE7dPFPHRE9EYcJXR8qnLApWLg9k3mBBd4KsdMJ",
     tx: [
-      { id: "x2", type: "receive", amount: 12.4032, address: "89ye4iM3hpU4NkzC7MzHFRQ8ZKnq2rXbxQ4TZa1c", time: "Jul 13, 13:37", hash: "22c9a0148ef7" },
+      { id: "x2a", type: "receive", amount: 12.4032, address: "89ye4iM3hpU4NkzC7MzHFRQ8ZKnq2rXbxQ4TZa1c", time: "Jul 13, 13:37", hash: "22c9a0148ef7" },
       { id: "x1", type: "send", amount: 2.1, address: "483knhWau4wS4KrRVvHnzCwHK8pkTKzXvJKzWKN5", time: "Jul 10, 10:47", hash: "8f11a2c930b1" },
       { id: "x3", type: "send", amount: 0.42, address: "42kQr8gU6dXvNtWzMK7Yb9RzC1eLpTHqQd8YbnAF", time: "Jul 9, 08:15", hash: "aa4b7c0d1e29" },
-      { id: "x2", type: "receive", amount: 5.0, address: "89ye4iM3hpU4NkzC7MzHFRQ8ZKnq2rXbxQ4TZa1c", time: "Jul 5, 21:03", hash: "22c9a0148ef7" },
+      { id: "x2b", type: "receive", amount: 5.0, address: "89ye4iM3hpU4NkzC7MzHFRQ8ZKnq2rXbxQ4TZa1c", time: "Jul 5, 21:03", hash: "22c9a0148ef7" },
     ],
   },
 };
@@ -132,7 +132,7 @@ function TxRow({ tx, symbol }) {
 }
 
 /* ---------- Send flow ---------- */
-function SendFlow({ wallet, onClose }) {
+function SendFlow({ wallet, onClose, onSent }) {
   const [step, setStep] = useState(1);
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
@@ -147,7 +147,8 @@ function SendFlow({ wallet, onClose }) {
     // ---------------------------------------------------------------
     // Hook your real send logic up here. `payload` is everything a
     // signer / RPC call would need. Replace the mock hash below with
-    // your actual broadcast + await-confirmation flow.
+    // your actual broadcast + await-confirmation flow, and call
+    // onSent(...) once you have a real hash/confirmation back.
     // ---------------------------------------------------------------
     const payload = { to: recipient.trim(), amount: amountNum, asset: wallet.symbol };
     console.log("submitTransaction payload", payload);
@@ -155,6 +156,17 @@ function SendFlow({ wallet, onClose }) {
     const hexChars = "0123456789abcdef";
     const mockHash = "0x" + Array.from({ length: 12 }, () => hexChars[Math.floor(Math.random() * 16)]).join("");
     setTxHash(mockHash);
+
+    onSent({
+      id: `sent-${Date.now()}`,
+      type: "send",
+      amount: amountNum,
+      fee,
+      address: recipient.trim(),
+      time: "Just now",
+      hash: mockHash,
+    });
+
     setStep(3);
   }
 
@@ -310,12 +322,29 @@ function ReceivePanel({ wallet, onClose }) {
 function WalletApp() {
   const [activeSymbol, setActiveSymbol] = useState("ETH");
   const [panel, setPanel] = useState(null); // null | 'send' | 'receive'
-  const wallet = ASSETS[activeSymbol];
+  // Cloned into state (rather than read straight from ASSETS) so sends can
+  // update balance + activity without mutating the original mock data.
+  const [assets, setAssets] = useState(() => JSON.parse(JSON.stringify(ASSETS)));
+  const wallet = assets[activeSymbol];
   const usdValue = (wallet.balance * wallet.usdRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   function switchAsset(sym) {
     setActiveSymbol(sym);
     setPanel(null);
+  }
+
+  function recordSend(tx) {
+    setAssets((prev) => {
+      const current = prev[activeSymbol];
+      return {
+        ...prev,
+        [activeSymbol]: {
+          ...current,
+          balance: Math.max(0, +(current.balance - tx.amount - tx.fee).toFixed(8)),
+          tx: [tx, ...current.tx],
+        },
+      };
+    });
   }
 
   return (
@@ -408,11 +437,11 @@ function WalletApp() {
         <div style={{ padding: "18px 20px 20px" }}>
           <span style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--text-tertiary)", letterSpacing: 0.5 }}>ACTIVITY</span>
           <div style={{ marginTop: 6 }}>
-            {wallet.tx.map((tx) => <TxRow key={tx.id} tx={tx} symbol={wallet.symbol} />)}
+            {wallet.tx.map((tx, i) => <TxRow key={`${tx.id}-${i}`} tx={tx} symbol={wallet.symbol} />)}
           </div>
         </div>
 
-        {panel === "send" && <SendFlow wallet={wallet} onClose={() => setPanel(null)} />}
+        {panel === "send" && <SendFlow wallet={wallet} onClose={() => setPanel(null)} onSent={recordSend} />}
         {panel === "receive" && <ReceivePanel wallet={wallet} onClose={() => setPanel(null)} />}
       </div>
     </div>
