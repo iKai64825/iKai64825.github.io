@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>ErisWallet</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: #0B0D12;
+    min-height: 100vh;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    padding: 28px 12px;
+  }
+  #root { width: 100%; max-width: 400px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js" crossorigin></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo } = React;
+
+/* ---------- Icons (small inline replacements, no extra deps) ---------- */
+const Icon = ({ children, size = 18, color = "currentColor", strokeWidth = 1.8 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
+       strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+    {children}
+  </svg>
+);
+const ArrowUpRight = (p) => <Icon {...p}><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></Icon>;
+const ArrowDownLeft = (p) => <Icon {...p}><line x1="17" y1="7" x2="7" y2="17"/><polyline points="17 17 7 17 7 7"/></Icon>;
+const ArrowLeftRight = (p) => <Icon {...p}><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></Icon>;
+const ChevronLeft = (p) => <Icon {...p}><polyline points="15 18 9 12 15 6"/></Icon>;
+const Check = (p) => <Icon {...p}><polyline points="20 6 9 17 4 12"/></Icon>;
+const Copy = (p) => <Icon {...p}><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></Icon>;
+const QrCode = (p) => <Icon {...p}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><line x1="14" y1="14" x2="14" y2="14.01"/><line x1="17.5" y1="14" x2="17.5" y2="17.5"/><line x1="14" y1="17.5" x2="17.5" y2="17.5"/><line x1="14" y1="21" x2="17.5" y2="21"/><line x1="21" y1="14" x2="21" y2="21"/></Icon>;
+const Wallet2 = (p) => <Icon {...p}><path d="M17 14a2 2 0 1 0 0 4h4v-4h-4z"/><path d="M3 8v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/><path d="M3 8V6a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v4H5a2 2 0 0 0 0 4"/></Icon>;
+
+/* ---------- Mock fingerprint (visual-only, not a real hash) ---------- */
+function fingerprint(seed, bars = 24) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  const out = [];
+  for (let i = 0; i < bars; i++) {
+    h = (h * 1103515245 + 12345) >>> 0;
+    out.push(4 + (h % 16));
+  }
+  return out;
+}
+function Fingerprint({ seed, tone }) {
+  const bars = useMemo(() => fingerprint(seed), [seed]);
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 18 }}>
+      {bars.map((h, i) => (
+        <div key={i} style={{ width: 2, height: h, background: tone, opacity: 0.55 + (h / 20) * 0.45, borderRadius: 1 }} />
+      ))}
+    </div>
+  );
+}
+
+/* ---------- Mock data: multi-asset ---------- */
+const ASSETS = {
+  ETH: {
+    symbol: "ETH",
+    name: "Ether",
+    network: "Ethereum mainnet",
+    balance: 2.4471,
+    usdRate: 2796.42,
+    fee: 0.00042,
+    address: "0x7fA9c1D4b8E22f0aC6b3d1E9F4a5C8B2D7e6A3F1",
+    tx: [
+      { id: "e1", type: "send", amount: 0.5, address: "0x8f2b19c31aa04de7", time: "Today, 14:22", hash: "0x8f2b19c31aa" },
+      { id: "e2", type: "receive", amount: 1.2, address: "0x1a9d44e0bbcc9231", time: "Yesterday, 09:05", hash: "0x1a9d44e0bb" },
+      { id: "e3", type: "send", amount: 0.1102, address: "0xbe7712aacc0091df", time: "Jul 17, 18:40", hash: "0xbe7712aacc" },
+      { id: "e4", type: "receive", amount: 0.75, address: "0x3fc09021ddaa1147", time: "Jul 14, 11:12", hash: "0x3fc09021dd" },
+    ],
+  },
+  XMR: {
+    symbol: "XMR",
+    name: "Monero",
+    network: "Monero mainnet",
+    balance: 14.8832,
+    usdRate: 158.2,
+    fee: 0.00012,
+    address: "4AdUndXHHZ9pfQj27iMAjAr4qbNM4Ne6z4kZ8ZYvyXn29Xf8U6VfxwzE7dPFPHRE9EYcJXR8qnLApWLg9k3mBBd4KsdMJ",
+    tx: [
+      { id: "x1", type: "send", amount: 2.1, address: "483knhWau4wS4KrRVvHnzCwHK8pkTKzXvJKzWKN5", time: "Today, 10:47", hash: "8f11a2c930b1" },
+      { id: "x2", type: "receive", amount: 5.0, address: "89ye4iM3hpU4NkzC7MzHFRQ8ZKnq2rXbxQ4TZa1c", time: "Jul 18, 21:03", hash: "22c9a0148ef7" },
+      { id: "x3", type: "send", amount: 0.42, address: "42kQr8gU6dXvNtWzMK7Yb9RzC1eLpTHqQd8YbnAF", time: "Jul 16, 08:15", hash: "aa4b7c0d1e29" },
+    ],
+  },
+};
+
+function short(addr) {
+  if (!addr) return "";
+  return addr.length > 12 ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : addr;
+}
+
+function TxRow({ tx, symbol }) {
+  const isSend = tx.type === "send";
+  const tone = isSend ? "var(--red)" : "var(--green)";
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 4px", borderBottom: "1px solid var(--border)" }}>
+      <div style={{ width: 34, height: 34, borderRadius: 8, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        {isSend ? <ArrowUpRight size={16} color="var(--red)" /> : <ArrowDownLeft size={16} color="var(--green)" />}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--text-primary)" }}>{isSend ? "Sent" : "Received"}</span>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: tone, fontWeight: 500 }}>
+            {isSend ? "-" : "+"}{tx.amount} {symbol}
+          </span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, alignItems: "center" }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-secondary)" }}>{short(tx.address)} · {tx.time}</span>
+          <Fingerprint seed={tx.hash} tone={tone} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Send flow ---------- */
+function SendFlow({ wallet, onClose }) {
+  const [step, setStep] = useState(1);
+  const [recipient, setRecipient] = useState("");
+  const [amount, setAmount] = useState("");
+  const [txHash, setTxHash] = useState("");
+
+  const fee = wallet.fee;
+  const amountNum = parseFloat(amount) || 0;
+  const total = amountNum + fee;
+  const canContinue = recipient.trim().length > 0 && amountNum > 0 && amountNum <= wallet.balance;
+
+  function submitTransaction() {
+    // ---------------------------------------------------------------
+    // Hook your real send logic up here. `payload` is everything a
+    // signer / RPC call would need. Replace the mock hash below with
+    // your actual broadcast + await-confirmation flow.
+    // ---------------------------------------------------------------
+    const payload = { to: recipient.trim(), amount: amountNum, asset: wallet.symbol };
+    console.log("submitTransaction payload", payload);
+
+    const hexChars = "0123456789abcdef";
+    const mockHash = "0x" + Array.from({ length: 12 }, () => hexChars[Math.floor(Math.random() * 16)]).join("");
+    setTxHash(mockHash);
+    setStep(3);
+  }
+
+  return (
+    <div style={{ position: "absolute", inset: 0, background: "var(--bg)", display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "18px 20px", borderBottom: "1px solid var(--border)" }}>
+        <button onClick={step === 1 ? onClose : () => setStep(step - 1)} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex" }} aria-label="Back">
+          <ChevronLeft size={20} />
+        </button>
+        <span style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "var(--text-primary)", fontWeight: 500 }}>
+          {step === 1 ? `Send ${wallet.symbol}` : step === 2 ? "Review transfer" : "Sent"}
+        </span>
+      </div>
+
+      <div style={{ flex: 1, padding: "24px 20px", overflowY: "auto" }}>
+        {step === 1 && (
+          <>
+            <label style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--text-secondary)", letterSpacing: 0.3 }}>RECIPIENT ADDRESS</label>
+            <input
+              value={recipient}
+              onChange={(e) => setRecipient(e.target.value)}
+              placeholder={wallet.symbol === "XMR" ? "4..." : "0x..."}
+              style={{ width: "100%", marginTop: 8, marginBottom: 22, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", color: "var(--text-primary)", fontFamily: "var(--font-mono)", fontSize: 13, outline: "none", boxSizing: "border-box" }}
+            />
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+              <label style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--text-secondary)", letterSpacing: 0.3 }}>AMOUNT</label>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-tertiary)" }}>Balance: {wallet.balance} {wallet.symbol}</span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", marginTop: 8, marginBottom: 4, background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px" }}>
+              <input
+                value={amount}
+                onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
+                placeholder="0.00"
+                style={{ flex: 1, background: "transparent", border: "none", color: "var(--text-primary)", fontFamily: "var(--font-mono)", fontSize: 18, outline: "none" }}
+              />
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-secondary)", marginRight: 10 }}>{wallet.symbol}</span>
+              <button
+                onClick={() => setAmount(String(wallet.balance))}
+                style={{ background: "var(--surface-3)", border: "1px solid var(--border)", borderRadius: 6, color: "var(--gold)", fontSize: 11, fontFamily: "var(--font-body)", padding: "4px 8px", cursor: "pointer", letterSpacing: 0.3 }}
+              >
+                MAX
+              </button>
+            </div>
+            {amountNum > wallet.balance && (
+              <p style={{ color: "var(--red)", fontSize: 12, fontFamily: "var(--font-body)", marginTop: 6 }}>Amount exceeds available balance.</p>
+            )}
+
+            <button
+              disabled={!canContinue}
+              onClick={() => setStep(2)}
+              style={{ width: "100%", marginTop: 30, padding: "14px 0", borderRadius: 10, border: "none", background: canContinue ? "var(--gold)" : "var(--surface-2)", color: canContinue ? "#171208" : "var(--text-tertiary)", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 600, letterSpacing: 0.3, cursor: canContinue ? "pointer" : "not-allowed" }}
+            >
+              Review transfer
+            </button>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <div style={{ background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 14, padding: "20px" }}>
+              {[
+                ["To", short(recipient) || "—"],
+                ["Amount", `${amountNum || 0} ${wallet.symbol}`],
+                ["Network fee (est.)", `${fee} ${wallet.symbol}`],
+              ].map(([k, v]) => (
+                <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0" }}>
+                  <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--text-secondary)" }}>{k}</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-primary)" }}>{v}</span>
+                </div>
+              ))}
+              <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 12, display: "flex", justifyContent: "space-between" }}>
+                <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>Total</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 15, color: "var(--gold)", fontWeight: 600 }}>{total.toFixed(5)} {wallet.symbol}</span>
+              </div>
+            </div>
+
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--text-tertiary)", marginTop: 16, lineHeight: 1.6 }}>
+              Double-check the recipient address. Transfers on {wallet.network} cannot be reversed once confirmed.
+            </p>
+
+            <button
+              onClick={submitTransaction}
+              style={{ width: "100%", marginTop: 20, padding: "14px 0", borderRadius: 10, border: "none", background: "var(--gold)", color: "#171208", fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 600, letterSpacing: 0.3, cursor: "pointer" }}
+            >
+              Confirm and send
+            </button>
+          </>
+        )}
+
+        {step === 3 && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", paddingTop: 30 }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--surface-2)", border: "1px solid var(--green)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+              <Check size={26} color="var(--green)" />
+            </div>
+            <p style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "var(--text-primary)", margin: 0 }}>{amountNum} {wallet.symbol} sent</p>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--text-secondary)", marginTop: 8 }}>to {short(recipient)}</p>
+            <div style={{ marginTop: 18 }}><Fingerprint seed={txHash} tone="var(--gold)" /></div>
+            <p style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-tertiary)", marginTop: 10 }}>{txHash}</p>
+            <button
+              onClick={onClose}
+              style={{ marginTop: 26, width: "100%", padding: "14px 0", borderRadius: 10, border: "1px solid var(--border)", background: "transparent", color: "var(--text-primary)", fontFamily: "var(--font-body)", fontSize: 14, cursor: "pointer" }}
+            >
+              Done
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Receive panel ---------- */
+function ReceivePanel({ wallet, onClose }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div style={{ position: "absolute", inset: 0, background: "var(--bg)", display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "18px 20px", borderBottom: "1px solid var(--border)" }}>
+        <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", display: "flex" }} aria-label="Back">
+          <ChevronLeft size={20} />
+        </button>
+        <span style={{ fontFamily: "var(--font-body)", fontSize: 15, color: "var(--text-primary)", fontWeight: 500 }}>Receive {wallet.symbol}</span>
+      </div>
+      <div style={{ flex: 1, padding: "36px 24px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div style={{ width: 180, height: 180, borderRadius: 16, background: "var(--surface-2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <QrCode size={100} color="var(--text-secondary)" strokeWidth={1} />
+        </div>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--text-tertiary)", marginTop: 18, textAlign: "center" }}>
+          Only send {wallet.symbol} on {wallet.network} to this address.
+        </p>
+        <div style={{ marginTop: 20, width: "100%", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-primary)", wordBreak: "break-all" }}>{wallet.address}</span>
+          <button
+            onClick={() => {
+              navigator.clipboard?.writeText(wallet.address);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            }}
+            style={{ background: "none", border: "none", color: "var(--gold)", cursor: "pointer", display: "flex", flexShrink: 0 }}
+            aria-label="Copy address"
+          >
+            <Copy size={16} />
+          </button>
+        </div>
+        {copied && <span style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--green)", marginTop: 8 }}>Copied</span>}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- App ---------- */
+function WalletApp() {
+  const [activeSymbol, setActiveSymbol] = useState("ETH");
+  const [panel, setPanel] = useState(null); // null | 'send' | 'receive'
+  const wallet = ASSETS[activeSymbol];
+  const usdValue = (wallet.balance * wallet.usdRate).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function switchAsset(sym) {
+    setActiveSymbol(sym);
+    setPanel(null);
+  }
+
+  return (
+    <div style={{ fontFamily: "var(--font-body)", position: "relative" }}>
+      <style>{`
+        .eris-wallet {
+          --bg: #12151C;
+          --surface-2: #1A1F29;
+          --surface-3: #212836;
+          --border: #2A3140;
+          --gold: #C9A961;
+          --text-primary: #EDEEF2;
+          --text-secondary: #8B92A5;
+          --text-tertiary: #565F72;
+          --red: #C1554A;
+          --green: #5FBF8F;
+          --font-display: 'Fraunces', serif;
+          --font-body: 'IBM Plex Sans', sans-serif;
+          --font-mono: 'IBM Plex Mono', monospace;
+        }
+        .eris-wallet input::placeholder { color: var(--text-tertiary); }
+        .eris-wallet button:focus-visible, .eris-wallet input:focus-visible {
+          outline: 2px solid var(--gold);
+          outline-offset: 1px;
+        }
+      `}</style>
+
+      <div className="eris-wallet" style={{ background: "var(--bg)", borderRadius: 20, border: "1px solid var(--border)", minHeight: 660, position: "relative", overflow: "hidden" }}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 20px 0" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 26, height: 26, borderRadius: 7, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Wallet2 size={14} color="var(--gold)" />
+            </div>
+            <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>Main vault</span>
+          </div>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--green)", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 20, padding: "4px 10px" }}>
+            ● {wallet.network}
+          </span>
+        </div>
+
+        {/* Asset switcher */}
+        <div style={{ display: "flex", gap: 8, padding: "16px 20px 0" }}>
+          {Object.values(ASSETS).map((a) => (
+            <button
+              key={a.symbol}
+              onClick={() => switchAsset(a.symbol)}
+              style={{
+                flex: 1,
+                padding: "9px 0",
+                borderRadius: 9,
+                border: a.symbol === activeSymbol ? "1px solid var(--gold)" : "1px solid var(--border)",
+                background: a.symbol === activeSymbol ? "var(--surface-3)" : "transparent",
+                color: a.symbol === activeSymbol ? "var(--text-primary)" : "var(--text-secondary)",
+                fontFamily: "var(--font-body)",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              {a.symbol}
+            </button>
+          ))}
+        </div>
+
+        {/* Balance hero */}
+        <div style={{ padding: "26px 20px 24px", textAlign: "center", borderBottom: "1px solid var(--border)" }}>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 44, fontWeight: 500, color: "var(--text-primary)", letterSpacing: -0.5 }}>
+            {wallet.balance} <span style={{ fontSize: 20, color: "var(--text-secondary)" }}>{wallet.symbol}</span>
+          </div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-secondary)", marginTop: 6 }}>${usdValue}</div>
+
+          <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 26 }}>
+            {[
+              { label: "Send", icon: <ArrowUpRight size={17} />, onClick: () => setPanel("send") },
+              { label: "Receive", icon: <ArrowDownLeft size={17} />, onClick: () => setPanel("receive") },
+              { label: "Swap", icon: <ArrowLeftRight size={17} />, onClick: () => {} },
+            ].map((a) => (
+              <button key={a.label} onClick={a.onClick} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", color: "var(--text-primary)" }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--surface-2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gold)" }}>
+                  {a.icon}
+                </div>
+                <span style={{ fontSize: 12, fontFamily: "var(--font-body)", color: "var(--text-secondary)" }}>{a.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Activity */}
+        <div style={{ padding: "18px 20px 20px" }}>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--text-tertiary)", letterSpacing: 0.5 }}>ACTIVITY</span>
+          <div style={{ marginTop: 6 }}>
+            {wallet.tx.map((tx) => <TxRow key={tx.id} tx={tx} symbol={wallet.symbol} />)}
+          </div>
+        </div>
+
+        {panel === "send" && <SendFlow wallet={wallet} onClose={() => setPanel(null)} />}
+        {panel === "receive" && <ReceivePanel wallet={wallet} onClose={() => setPanel(null)} />}
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<WalletApp />);
+</script>
+</body>
+</html>
