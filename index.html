@@ -126,6 +126,32 @@ const ASSETS = {
       { id: "x16", type: "send", amount: 1.2, address: "54mV8nQx2PcL7zRt9YwA3bDf6GhK1eJs", time: "Aug 25, 16:50", hash: "a39c7e20d641" }
     ],
   },
+  
+  BTC: {
+    symbol: "BTC",
+    name: "Bitcoin",
+    network: "Bitcoin mainnet",
+    balance: 0.02666667,
+    usdRate: 100000,
+    fee: 0.00005,
+
+    // Demonstration address only; not a real receiving address.
+    address: "bc1qexampleaddressforeriswalletpoc000000000",
+
+    tx: [
+      { id: "b1", type: "receive", amount: 0.004, address: "bc1qsendera001", time: "Today, 12:34", hash: "btc8a1f20c491" },
+      { id: "b2", type: "send", amount: 0.0008, address: "bc1qrecipient002", time: "Yesterday, 16:12", hash: "btc71c3d0a284" },
+      { id: "b3", type: "receive", amount: 0.0025, address: "bc1qsenderb003", time: "Oct 16, 09:48", hash: "btc4e91a7c035" },
+      { id: "b4", type: "send", amount: 0.0012, address: "bc1qrecipient004", time: "Oct 13, 20:05", hash: "btc2f60b8d173" },
+      { id: "b5", type: "receive", amount: 0.006, address: "bc1qsenderc005", time: "Oct 10, 14:27", hash: "btc9d32e1a650" },
+      { id: "b6", type: "send", amount: 0.0005, address: "bc1qrecipient006", time: "Oct 7, 11:19", hash: "btc5a81c4f207" },
+      { id: "b7", type: "receive", amount: 0.003, address: "bc1qsenderd007", time: "Oct 3, 18:42", hash: "btc6c04f2a819" },
+      { id: "b8", type: "send", amount: 0.0015, address: "bc1qrecipient008", time: "Sep 28, 08:56", hash: "btc3b72d9e104" },
+      { id: "b9", type: "receive", amount: 0.005, address: "bc1qsendere009", time: "Sep 22, 13:03", hash: "btc0f91a6c352" },
+      { id: "b10", type: "receive", amount: 0.002, address: "bc1qsenderf010", time: "Sep 15, 10:41", hash: "btc7e25b3d861" }
+    ],
+  },
+
 };
 
 
@@ -406,7 +432,7 @@ function WalletApp() {
             <div style={{ width: 26, height: 26, borderRadius: 7, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Wallet2 size={14} color="var(--gold)" />
             </div>
-            <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>Monero Wallet</span>
+            <span style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>ErisWallet</span>
           </div>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--green)", background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 20, padding: "4px 10px" }}>
             ● {wallet.network}
