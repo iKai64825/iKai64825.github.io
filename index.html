@@ -69,38 +69,65 @@ function Fingerprint({ seed, tone }) {
 }
 
 /* ---------- Mock data: multi-asset ---------- */
+
 const ASSETS = {
   ETH: {
     symbol: "ETH",
     name: "Ether",
     network: "Ethereum mainnet",
-    balance: 2.4471,
+    balance: 1.05,
     usdRate: 2796.42,
     fee: 0.00042,
     address: "0x7fA9c1D4b8E22f0aC6b3d1E9F4a5C8B2D7e6A3F1",
     tx: [
-      { id: "e1", type: "send", amount: 0.5, address: "0x8f2b19c31aa04de7", time: "Today, 14:22", hash: "0x8f2b19c31aa" },
-      { id: "e2", type: "receive", amount: 1.2, address: "0x1a9d44e0bbcc9231", time: "Yesterday, 09:05", hash: "0x1a9d44e0bb" },
-      { id: "e3", type: "send", amount: 0.1102, address: "0xbe7712aacc0091df", time: "Jul 17, 18:40", hash: "0xbe7712aacc" },
-      { id: "e4", type: "receive", amount: 0.75, address: "0x3fc09021ddaa1147", time: "Jul 14, 11:12", hash: "0x3fc09021dd" },
+      { id: "e1", type: "send", amount: 0.05, address: "0x8f2b19c31aa04de7", time: "Today, 14:22", hash: "0x8f2b19c31aa" },
+      { id: "e2", type: "receive", amount: 0.12, address: "0x1a9d44e0bbcc9231", time: "Yesterday, 09:05", hash: "0x1a9d44e0bb" },
+      { id: "e3", type: "send", amount: 0.025, address: "0xbe7712aacc0091df", time: "Oct 16, 18:40", hash: "0xbe7712aacc" },
+      { id: "e4", type: "receive", amount: 0.18, address: "0x3fc09021ddaa1147", time: "Oct 14, 11:12", hash: "0x3fc09021dd" },
+      { id: "e5", type: "send", amount: 0.08, address: "0x71cd29a48fbc120e", time: "Oct 11, 16:31", hash: "0x71cd29a48f" },
+      { id: "e6", type: "receive", amount: 0.25, address: "0xa9127de431c80f62", time: "Oct 8, 12:04", hash: "0xa9127de431c" },
+      { id: "e7", type: "send", amount: 0.015, address: "0x45bc8d901f2a77e3", time: "Oct 5, 20:16", hash: "0x45bc8d901f2a" },
+      { id: "e8", type: "receive", amount: 0.1, address: "0x98fa210cd634ab57", time: "Oct 2, 08:52", hash: "0x98fa210cd63" },
+      { id: "e9", type: "send", amount: 0.04, address: "0x2a5e7c19b4d083f6", time: "Sep 28, 15:43", hash: "0x2a5e7c19b4d0" },
+      { id: "e10", type: "receive", amount: 0.3, address: "0xd4f8a120b9e37c65", time: "Sep 24, 10:27", hash: "0xd4f8a120b9e3" },
+      { id: "e11", type: "send", amount: 0.065, address: "0x6c82a9e13f704bd2", time: "Sep 20, 19:08", hash: "0x6c82a9e13f70" },
+      { id: "e12", type: "receive", amount: 0.2, address: "0xb7315ed9a042c86f", time: "Sep 16, 13:55", hash: "0xb7315ed9a042" },
+      { id: "e13", type: "send", amount: 0.03, address: "0x0f91c8d3a527be64", time: "Sep 12, 17:21", hash: "0x0f91c8d3a527" },
+      { id: "e14", type: "receive", amount: 0.15, address: "0x83e2a7d149b60fc5", time: "Sep 8, 09:36", hash: "0x83e2a7d149b6" },
+      { id: "e15", type: "send", amount: 0.1, address: "0x1d76b5a830e4f291", time: "Sep 3, 21:14", hash: "0x1d76b5a830e4" },
+      { id: "e16", type: "receive", amount: 0.35, address: "0xc5a09f217e638bd4", time: "Aug 28, 14:48", hash: "0xc5a09f217e63" }
     ],
   },
+
   XMR: {
     symbol: "XMR",
     name: "Monero",
     network: "Monero mainnet",
-    balance: 14.8832,
+    balance: 11.0,
     usdRate: 158.2,
     fee: 0.00012,
     address: "4AdUndXHHZ9pfQj27iMAjAr4qbNM4Ne6z4kZ8ZYvyXn29Xf8U6VfxwzE7dPFPHRE9EYcJXR8qnLApWLg9k3mBBd4KsdMJ",
     tx: [
-      { id: "x2a", type: "receive", amount: 12.4032, address: "89ye4iM3hpU4NkzC7MzHFRQ8ZKnq2rXbxQ4TZa1c", time: "Jul 13, 13:37", hash: "22c9a0148ef7" },
-      { id: "x1", type: "send", amount: 2.1, address: "483knhWau4wS4KrRVvHnzCwHK8pkTKzXvJKzWKN5", time: "Jul 10, 10:47", hash: "8f11a2c930b1" },
-      { id: "x3", type: "send", amount: 0.42, address: "42kQr8gU6dXvNtWzMK7Yb9RzC1eLpTHqQd8YbnAF", time: "Jul 9, 08:15", hash: "aa4b7c0d1e29" },
-      { id: "x2b", type: "receive", amount: 5.0, address: "89ye4iM3hpU4NkzC7MzHFRQ8ZKnq2rXbxQ4TZa1c", time: "Jul 5, 21:03", hash: "22c9a0148ef7" },
+      { id: "x1", type: "receive", amount: 1.25, address: "89ye4iM3hpU4NkzC7MzHFRQ8ZKnq2rXbxQ4TZa1c", time: "Today, 11:42", hash: "22c9a0148ef7" },
+      { id: "x2", type: "send", amount: 0.42, address: "483knhWau4wS4KrRVvHnzCwHK8pkTKzXvJKzWKN5", time: "Yesterday, 16:17", hash: "8f11a2c930b1" },
+      { id: "x3", type: "receive", amount: 2.1, address: "42kQr8gU6dXvNtWzMK7Yb9RzC1eLpTHqQd8YbnAF", time: "Oct 16, 08:15", hash: "aa4b7c0d1e29" },
+      { id: "x4", type: "send", amount: 0.8, address: "89ye4iM3hpU4NkzC7MzHFRQ8ZKnq2rXbxQ4TZa1c", time: "Oct 13, 21:03", hash: "22c9a0148ef8" },
+      { id: "x5", type: "receive", amount: 0.65, address: "47fJ2wKp9LqR8sVx3NnY6mTd5AbC1eGh", time: "Oct 10, 13:26", hash: "b72d91ac40e5" },
+      { id: "x6", type: "send", amount: 1.1, address: "54mV8nQx2PcL7zRt9YwA3bDf6GhK1eJs", time: "Oct 7, 17:54", hash: "c83a51e7d920" },
+      { id: "x7", type: "receive", amount: 3.0, address: "89ye4iM3hpU4NkzC7MzHFRQ8ZKnq2rXbxQ4TZa1c", time: "Oct 3, 10:09", hash: "d21f67b0a439" },
+      { id: "x8", type: "send", amount: 0.25, address: "483knhWau4wS4KrRVvHnzCwHK8pkTKzXvJKzWKN5", time: "Sep 29, 19:32", hash: "e4097b2ac615" },
+      { id: "x9", type: "receive", amount: 1.8, address: "42kQr8gU6dXvNtWzMK7Yb9RzC1eLpTHqQd8YbnAF", time: "Sep 25, 12:46", hash: "f5182c6d9a03" },
+      { id: "x10", type: "send", amount: 0.95, address: "47fJ2wKp9LqR8sVx3NnY6mTd5AbC1eGh", time: "Sep 21, 15:18", hash: "a63e0d4f7b12" },
+      { id: "x11", type: "receive", amount: 2.5, address: "54mV8nQx2PcL7zRt9YwA3bDf6GhK1eJs", time: "Sep 17, 09:41", hash: "b7c204e18f36" },
+      { id: "x12", type: "send", amount: 0.6, address: "89ye4iM3hpU4NkzC7MzHFRQ8ZKnq2rXbxQ4TZa1c", time: "Sep 13, 22:05", hash: "c9d73a14e860" },
+      { id: "x13", type: "receive", amount: 1.4, address: "483knhWau4wS4KrRVvHnzCwHK8pkTKzXvJKzWKN5", time: "Sep 9, 14:33", hash: "d04e81a6f239" },
+      { id: "x14", type: "send", amount: 0.35, address: "42kQr8gU6dXvNtWzMK7Yb9RzC1eLpTHqQd8YbnAF", time: "Sep 4, 18:27", hash: "e61a93c5b742" },
+      { id: "x15", type: "receive", amount: 4.0, address: "47fJ2wKp9LqR8sVx3NnY6mTd5AbC1eGh", time: "Aug 30, 11:16", hash: "f82b04d7c195" },
+      { id: "x16", type: "send", amount: 1.2, address: "54mV8nQx2PcL7zRt9YwA3bDf6GhK1eJs", time: "Aug 25, 16:50", hash: "a39c7e20d641" }
     ],
   },
 };
+
 
 function short(addr) {
   if (!addr) return "";
